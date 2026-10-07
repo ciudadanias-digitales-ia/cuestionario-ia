@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cuestionario IA y Educación Superior</title>
+<meta name="description" content="Cuestionario de investigación: Educación superior e inteligencia artificial.">
+<style>
+/* =========================================================
+   CONFIGURACIÓN — pegue aquí la URL de su aplicación web de
+   Google Apps Script (termina en /exec). Ver guía de publicación.
+   ========================================================= */
+</style>
+<script>
+const CONFIG = {
+  ENDPOINT_URL: "https://script.google.com/macros/s/AKfycbwrO7ayYcORP72mjarOAGK8vjtKUay__Uj2BorMstFmkRD2Zs3nKAF4EUpit8fWRLmZ4w/exec",
+  CORREO_CONTACTO: "dhoyosc@ucn.edu.co",
+  COMITE_ETICA: "",            // Ej.: "el Comité de Ética de la Institución X". Vacío = no se muestra.
+  MAX_AUDIO_SEG: 180           // Duración máxima de cada audio (segundos)
+};
+</script>
+<style>
+:root{
+  --bg:#f4f6fa; --card:#ffffff; --ink:#1b2333; --muted:#5b6578; --line:#d9dfe9;
+  --brand:#1f3864; --brand-2:#2f5597; --brand-soft:#e8eef8; --ok:#1e7a4f; --ok-soft:#e5f4ec;
+  --bad:#b3261e; --bad-soft:#fbeaea; --warn-soft:#fff6e0; --rec:#d93025;
+  --radius:14px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+header.top{position:sticky;top:0;z-index:10;background:var(--brand);color:#fff;padding:10px 16px calc(10px) ;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+header.top .t{font-size:13px;opacity:.85;letter-spacing:.02em}
+header.top .s{font-size:15px;font-weight:600;line-height:1.3}
+.bar{height:6px;background:rgba(255,255,255,.25);border-radius:6px;margin-top:8px;overflow:hidden}
+.bar>i{display:block;height:100%;width:0;background:#9fc3ff;transition:width .3s}
+main{max-width:640px;margin:0 auto;padding:16px 16px 120px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px 18px;margin-bottom:14px}
+h1{font-size:23px;line-height:1.25;margin:0 0 10px;color:var(--brand)}
+h2{font-size:19px;line-height:1.3;margin:0 0 8px;color:var(--brand)}
+h3{font-size:16px;margin:18px 0 6px}
+p{margin:0 0 12px}
+.muted{color:var(--muted);font-size:15px}
+.kicker{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--brand-2);margin-bottom:4px}
+.consent p{font-size:15.5px}
+.consent b{color:var(--brand)}
+label.q{display:block;font-weight:600;margin:0 0 8px;line-height:1.35}
+.field{margin-bottom:22px}
+.opts{display:grid;gap:8px}
+.opt{display:flex;align-items:center;gap:12px;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;background:#fff;cursor:pointer;min-height:50px}
+.opt input{width:20px;height:20px;accent-color:var(--brand);flex:none;margin:0}
+.opt.sel{border-color:var(--brand);background:var(--brand-soft)}
+input[type=text],select,textarea{width:100%;font:inherit;font-size:16px;color:var(--ink);padding:12px 13px;border:1.5px solid var(--line);border-radius:11px;background:#fff;outline:none}
+input[type=text]:focus,select:focus,textarea:focus{border-color:var(--brand-2);box-shadow:0 0 0 3px rgba(47,85,151,.15)}
+textarea{min-height:140px;resize:vertical}
+.inline-other{margin-top:8px}
+.err{display:none;margin-top:8px;padding:9px 12px;border-radius:10px;background:var(--bad-soft);color:var(--bad);font-size:14.5px}
+.err.on{display:block}
+.inductor{font-size:22px;font-weight:700;color:var(--brand);background:var(--brand-soft);border-radius:12px;padding:16px;text-align:center;margin:6px 0 16px;line-height:1.3}
+.word{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;background:#fbfcfe}
+.word .row{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
+.word .num{font-weight:700;color:var(--brand);margin-right:4px}
+.word select{width:auto;min-width:120px;padding:9px 10px;font-size:15px}
+.seg{display:inline-flex;border:1.5px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{font:inherit;font-size:14px;padding:8px 11px;border:0;background:#fff;color:var(--ink);cursor:pointer;min-height:40px}
+.seg button+button{border-left:1.5px solid var(--line)}
+.seg button.on[data-v="positiva"]{background:var(--ok-soft);color:var(--ok);font-weight:700}
+.seg button.on[data-v="neutra"]{background:#eef0f4;font-weight:700}
+.seg button.on[data-v="negativa"]{background:var(--bad-soft);color:var(--bad);font-weight:700}
+.tiny{font-size:13px;color:var(--muted)}
+.help{background:var(--warn-soft);border-radius:12px;padding:12px 14px;font-size:15px;margin-bottom:16px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 12px}
+.tabs button{font:inherit;font-size:15.5px;font-weight:600;padding:12px;border-radius:11px;border:1.5px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;min-height:48px}
+.tabs button.on{border-color:var(--brand);background:var(--brand-soft);color:var(--brand)}
+.rec{border:1.5px dashed var(--line);border-radius:12px;padding:16px;text-align:center}
+.rec .timer{font-variant-numeric:tabular-nums;font-size:26px;font-weight:700;margin:6px 0 10px}
+.rec .dot{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--rec);margin-right:6px;animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.25}}
+.rec audio{width:100%;margin:8px 0}
+.btn{font:inherit;font-size:16.5px;font-weight:700;border:0;border-radius:12px;padding:14px 18px;cursor:pointer;min-height:52px}
+.btn.primary{background:var(--brand);color:#fff}
+.btn.primary:disabled{opacity:.5}
+.btn.ghost{background:#fff;color:var(--brand);border:1.5px solid var(--line)}
+.btn.recbtn{background:var(--rec);color:#fff;width:100%}
+.btn.stop{background:var(--ink);color:#fff;width:100%}
+.btn.small{font-size:14.5px;padding:10px 14px;min-height:44px}
+.done-badge{display:inline-block;background:var(--ok-soft);color:var(--ok);font-weight:700;font-size:14px;border-radius:999px;padding:4px 10px;margin-bottom:6px}
+nav.foot{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.97);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom));z-index:10}
+nav.foot .in{max-width:640px;margin:0 auto;display:flex;gap:10px}
+nav.foot .btn{flex:1}
+nav.foot .btn.ghost{flex:0 0 auto}
+.center{text-align:center}
+.big-ico{font-size:46px;line-height:1;margin:6px 0 12px}
+.hidden{display:none!important}
+.spinner{width:42px;height:42px;border:4px solid var(--brand-soft);border-top-color:var(--brand);border-radius:50%;animation:spin 1s linear infinite;margin:10px auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.summary li{margin-bottom:4px}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="t">Educación superior e IA · Cuestionario</div>
+  <div class="s" id="stepTitle">Bienvenida</div>
+  <div class="bar"><i id="bar"></i></div>
+</header>
+<main id="app"></main>
+<nav class="foot" id="foot">
+  <div class="in">
+    <button class="btn ghost" id="btnBack" type="button">Atrás</button>
+    <button class="btn primary" id="btnNext" type="button">Continuar</button>
+  </div>
+</nav>
+
+<script>
+/* ---------------- Contenido del cuestionario ---------------- */
+const DEPARTAMENTOS=["Amazonas","Antioquia","Arauca","Atlántico","Bogotá D.C.","Bolívar","Boyacá","Caldas","Caquetá","Casanare","Cauca","Cesar","Chocó","Córdoba","Cundinamarca","Guainía","Guaviare","Huila","La Guajira","Magdalena","Meta","Nariño","Norte de Santander","Putumayo","Quindío","Risaralda","San Andrés y Providencia","Santander","Sucre","Tolima","Valle del Cauca","Vaupés","Vichada"];
+
+const CARACT=[
+ {id:"modalidad",q:"1.1 Modalidad en la que cursa su programa",type:"radio",opts:["Virtual","Presencial"]},
+ {id:"facultad",q:"1.2 Facultad a la que pertenece su programa",type:"radio",opts:["Ciencias de la Salud","Educación","Ciencias Sociales y Humanas","Ingenierías","Ciencias Económicas, Administrativas y Contables","Derecho y Ciencias Políticas","Comunicación y Artes","Otra"],other:"Otra"},
+ {id:"programa",q:"1.3 Programa académico",type:"text",ph:"Ej.: Psicología"},
+ {id:"semestre",q:"1.4 Semestre que cursa actualmente",type:"radio",opts:["1 a 3","4 a 6","7 a 10"]},
+ {id:"edad",q:"1.5 Rango de edad",type:"radio",opts:["18 a 22 años","23 a 27 años","28 a 35 años","Más de 35 años"]},
+ {id:"genero",q:"1.6 Género con el que se identifica",type:"radio",opts:["Mujer","Hombre","No binario","Otro","Prefiero no responder"],other:"Otro"},
+ {id:"zona",q:"1.7 Zona en la que vive",type:"radio",opts:["Urbana","Rural"]},
+ {id:"departamento",q:"1.8 Departamento donde vive",type:"select",opts:DEPARTAMENTOS},
+ {id:"municipio",q:"1.9 Municipio donde vive",type:"text",ph:"Ej.: Medellín"},
+ {id:"frecuencia",q:"1.10 ¿Con qué frecuencia usa herramientas de inteligencia artificial en sus actividades académicas?",type:"radio",opts:["Nunca","Ocasionalmente (algunas veces al mes)","Frecuentemente (algunas veces por semana)","Diariamente"]}
+];
+
+const AL=[
+ {id:"AL1",t:"Inteligencia artificial"},
+ {id:"AL2",t:"Inteligencia artificial en mi formación universitaria"},
+ {id:"AL3",t:"Ciudadanía digital"},
+ {id:"AL4",t:"Pensamiento crítico"},
+ {id:"AL5",t:"Ética en el uso de la inteligencia artificial"}
+];
+
+const AB=[
+ {id:"A1",t:"Usos y finalidades",q:"Describa cómo usa usted las herramientas de inteligencia artificial en sus actividades académicas. ¿Para qué tareas las utiliza, cuáles prefiere y por qué? Cuente un ejemplo reciente."},
+ {id:"A2",t:"Ética, autoría y ciudadanía digital",q:"Desde su punto de vista, ¿dónde está el límite entre usar la inteligencia artificial como apoyo legítimo y usarla de forma deshonesta en un trabajo académico? ¿Ha vivido alguna situación en la que haya tenido dudas sobre la autoría de un trabajo o sobre la información personal que comparte con estas herramientas? Cuéntela."},
+ {id:"A3",t:"Pensamiento crítico en la práctica",q:"Cuando una herramienta de inteligencia artificial le entrega una respuesta para una tarea, ¿qué hace usted antes de utilizarla? Relate alguna ocasión en la que haya detectado un error, un sesgo o información poco confiable en una respuesta de la IA, y cómo actuó."},
+ {id:"A4",t:"Modalidad de estudio",q:"¿De qué manera la modalidad en la que estudia (virtual o presencial) influye en la forma en que usa la inteligencia artificial y en cómo aprende con ella? Piense en el acompañamiento docente, la interacción con sus compañeros y la manera en que se evalúan sus trabajos."},
+ {id:"A5",t:"Preocupaciones",q:"¿Qué le preocupa del uso de la inteligencia artificial? Puede referirse a su formación, a su futuro profesional, a la sociedad o a su vida personal."},
+ {id:"A6",t:"Experiencia formativa y propuestas",q:"¿Qué ha cambiado la inteligencia artificial en su manera de aprender y de prepararse como futuro profesional? ¿Qué debería hacer la universidad para que los estudiantes usen la IA de manera crítica, ética y responsable?"}
+];
+
+/* ---------------- Estado ---------------- */
+const S={consent:null,c:{},al:{},ab:{}};
+AL.forEach(a=>S.al[a.id]=[0,1,2,3,4].map(()=>({palabra:"",rango:"",valencia:""})));
+AB.forEach(a=>S.ab[a.id]={modo:"texto",texto:"",audio:null}); // audio:{blob,mime,dur,url}
+const STORE="cuestIA_v1";
+function save(){try{const copy={consent:S.consent,c:S.c,al:S.al,ab:{}};AB.forEach(a=>copy.ab[a.id]={modo:S.ab[a.id].modo,texto:S.ab[a.id].texto});localStorage.setItem(STORE,JSON.stringify(copy))}catch(e){}}
+function load(){try{const d=JSON.parse(localStorage.getItem(STORE)||"null");if(!d)return;S.consent=d.consent;Object.assign(S.c,d.c||{});Object.keys(d.al||{}).forEach(k=>S.al[k]=d.al[k]);Object.keys(d.ab||{}).forEach(k=>{if(S.ab[k]){S.ab[k].modo=d.ab[k].modo;S.ab[k].texto=d.ab[k].texto||""}})}catch(e){}}
+function clearStore(){try{localStorage.removeItem(STORE)}catch(e){}}
+load();
+
+/* ---------------- Pasos ---------------- */
+const STEPS=["consent","caract","al-intro",...AL.map(a=>"al:"+a.id),"ab-intro",...AB.map(a=>"ab:"+a.id),"review"];
+let step=0;
+const app=document.getElementById("app"),bar=document.getElementById("bar"),title=document.getElementById("stepTitle");
+const btnNext=document.getElementById("btnNext"),btnBack=document.getElementById("btnBack"),foot=document.getElementById("foot");
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function render(){
+  stopAnyRecording();
+  const k=STEPS[step];
+  bar.style.width=Math.round(step/(STEPS.length-1)*100)+"%";
+  btnBack.classList.toggle("hidden",step===0);
+  btnNext.textContent= k==="review"?"Enviar respuestas":"Continuar";
+  btnNext.disabled=false;
+  if(k==="consent")return rConsent();
+  if(k==="caract")return rCaract();
+  if(k==="al-intro")return rAlIntro();
+  if(k.startsWith("al:"))return rAl(k.slice(3));
+  if(k==="ab-intro")return rAbIntro();
+  if(k.startsWith("ab:"))return rAb(k.slice(3));
+  if(k==="review")return rReview();
+}
+function go(d){step=Math.max(0,Math.min(STEPS.length-1,step+d));render();window.scrollTo({top:0,behavior:"instant"in window?"instant":"auto"})}
+
+/* ---- Consentimiento ---- */
+function rConsent(){
+  title.textContent="Consentimiento informado";
+  const comite=CONFIG.COMITE_ETICA?` Este estudio cuenta con el aval de ${esc(CONFIG.COMITE_ETICA)}.`:"";
+  app.innerHTML=`
+  <div class="card consent">
+    <div class="kicker">Proyecto de investigación</div>
+    <h1>Educación superior e inteligencia artificial: fomentando ciudadanías digitales y pensamiento crítico en estudiantes</h1>
+    <p>Usted ha sido invitado(a) a participar en esta investigación, desarrollada por un equipo de investigación en educación superior.</p>
+    <p><b>Propósito.</b> Conocer las percepciones, usos y prácticas de estudiantes universitarios de modalidad virtual y presencial frente a la inteligencia artificial, y su relación con la ciudadanía digital y el pensamiento crítico.</p>
+    <p><b>Su participación.</b> Responder un cuestionario en línea de aproximadamente 25 a 30 minutos. En las preguntas abiertas puede responder por escrito o grabando un audio, como prefiera.</p>
+    <p><b>Voluntariedad.</b> Su participación es voluntaria. Puede dejar de responder en cualquier momento sin ninguna consecuencia sobre su situación académica.</p>
+    <p><b>Confidencialidad y tratamiento de datos.</b> Sus respuestas se analizarán de manera agregada y con fines exclusivamente académicos. No se publicarán nombres ni datos que permitan identificarlo(a). Las grabaciones de voz se transcribirán, se almacenarán de forma segura con acceso exclusivo del equipo investigador y se eliminarán al finalizar el estudio. El tratamiento de la información se ajusta a la Ley 1581 de 2012.</p>
+    <p><b>Riesgos y beneficios.</b> De acuerdo con la Resolución 8430 de 1993, este estudio es de riesgo mínimo. No recibirá beneficio económico; los resultados contribuirán a mejorar las estrategias pedagógicas sobre inteligencia artificial en la educación superior.</p>
+    <p><b>Contacto.</b> Para resolver dudas o solicitar información adicional, escriba al investigador principal: <a href="mailto:${esc(CONFIG.CORREO_CONTACTO)}">${esc(CONFIG.CORREO_CONTACTO)}</a>.${comite}</p>
+  </div>
+  <div class="card">
+    <label class="q">He leído la información anterior, soy mayor de 18 años y entiendo que mi participación es voluntaria.</label>
+    <div class="opts" id="cons">
+      ${["Acepto participar","No acepto participar"].map(o=>`<label class="opt ${S.consent===o?"sel":""}"><input type="radio" name="cons" value="${o}" ${S.consent===o?"checked":""}><span>${o}</span></label>`).join("")}
+    </div>
+    <div class="err" id="e_cons">Seleccione una opción para continuar.</div>
+  </div>`;
+  app.querySelectorAll('input[name=cons]').forEach(i=>i.onchange=()=>{S.consent=i.value;save();markSel("cons")});
+}
+function markSel(name){document.querySelectorAll(`input[name="${name}"]`).forEach(i=>i.closest(".opt").classList.toggle("sel",i.checked))}
+
+function rDecline(){
+  title.textContent="Gracias";bar.style.width="100%";foot.classList.add("hidden");clearStore();
+  app.innerHTML=`<div class="card center"><div class="big-ico">🙏</div><h1>Gracias por su tiempo</h1>
+  <p>Gracias por considerar esta invitación. Respetamos su decisión.</p><p class="muted">Ya puede cerrar esta ventana.</p></div>`;
+}
+
+/* ---- Caracterización ---- */
+function rCaract(){
+  title.textContent="Sección 1 · Caracterización";
+  app.innerHTML=`<div class="card"><div class="kicker">Sección 1 de 3</div><h2>Información general</h2>
+  <p class="muted">Estas preguntas nos permiten describir a quienes participan. Todas son obligatorias.</p></div>
+  <div class="card">${CARACT.map(fieldHTML).join("")}</div>`;
+  CARACT.forEach(f=>{
+    if(f.type==="radio"){
+      app.querySelectorAll(`input[name="${f.id}"]`).forEach(i=>i.onchange=()=>{S.c[f.id]=i.value;markSel(f.id);
+        if(f.other){const o=document.getElementById("o_"+f.id);o.classList.toggle("hidden",i.value!==f.other)}save()});
+      if(f.other){const o=document.getElementById("o_"+f.id);o.oninput=()=>{S.c[f.id+"_otro"]=o.value;save()}}
+    }else{
+      const el=document.getElementById("f_"+f.id);el.oninput=el.onchange=()=>{S.c[f.id]=el.value;save()};
+    }
+  });
+}
+function fieldHTML(f){
+  let inner="";
+  if(f.type==="radio"){
+    inner=`<div class="opts">${f.opts.map(o=>`<label class="opt ${S.c[f.id]===o?"sel":""}"><input type="radio" name="${f.id}" value="${esc(o)}" ${S.c[f.id]===o?"checked":""}><span>${esc(o)}${o===f.other?" (¿cuál?)":""}</span></label>`).join("")}</div>`;
+    if(f.other)inner+=`<input type="text" class="inline-other ${S.c[f.id]===f.other?"":"hidden"}" id="o_${f.id}" placeholder="Escriba cuál" value="${esc(S.c[f.id+"_otro"]||"")}">`;
+  }else if(f.type==="select"){
+    inner=`<select id="f_${f.id}"><option value="">Seleccione…</option>${f.opts.map(o=>`<option ${S.c[f.id]===o?"selected":""}>${esc(o)}</option>`).join("")}</select>`;
+  }else{
+    inner=`<input type="text" id="f_${f.id}" placeholder="${esc(f.ph||"")}" value="${esc(S.c[f.id]||"")}" autocomplete="off">`;
+  }
+  return `<div class="field" id="w_${f.id}"><label class="q">${esc(f.q)}</label>${inner}<div class="err" id="e_${f.id}">Esta pregunta es obligatoria.</div></div>`;
+}
+function vCaract(){
+  let first=null;
+  CARACT.forEach(f=>{
+    let ok=!!(S.c[f.id]&&String(S.c[f.id]).trim());
+    if(ok&&f.other&&S.c[f.id]===f.other)ok=!!(S.c[f.id+"_otro"]||"").trim();
+    document.getElementById("e_"+f.id).classList.toggle("on",!ok);
+    if(!ok&&!first)first=document.getElementById("w_"+f.id);
+  });
+  if(first){first.scrollIntoView({behavior:"smooth",block:"center"});return false}
+  return true;
+}
+
+/* ---- Asociación libre ---- */
+function rAlIntro(){
+  title.textContent="Sección 2 · Asociación libre";
+  app.innerHTML=`<div class="card"><div class="kicker">Sección 2 de 3</div><h2>Asociación libre de palabras</h2>
+  <p>A continuación verá cinco palabras o expresiones, una por pantalla. Para cada una:</p>
+  <ol><li>Escriba las <b>primeras cinco palabras</b> que se le vengan a la mente. No hay respuestas correctas ni incorrectas; nos interesa lo primero que piense.</li>
+  <li>Indique la <b>importancia</b> de cada palabra, de 1 a 5 (1 = la más importante). No repita números.</li>
+  <li>Indique si cada palabra tiene para usted un sentido <b>positivo, neutro o negativo</b>.</li></ol>
+  <p class="muted">Escriba una sola palabra o una expresión muy corta en cada espacio.</p></div>`;
+}
+function rAl(id){
+  const a=AL.find(x=>x.id===id),idx=AL.indexOf(a)+1,W=S.al[id];
+  title.textContent=`Sección 2 · Palabra ${idx} de 5`;
+  app.innerHTML=`<div class="card"><div class="kicker">Asociación libre · ${idx} de 5</div>
+  <p>¿Qué cinco palabras se le vienen a la mente al leer…</p>
+  <div class="inductor">«${esc(a.t)}»</div>
+  ${W.map((w,i)=>`<div class="word" data-i="${i}">
+     <div style="display:flex;align-items:center;gap:6px"><span class="num">${i+1}.</span><input type="text" class="wtxt" value="${esc(w.palabra)}" placeholder="Palabra ${i+1}" autocomplete="off" autocapitalize="none"></div>
+     <div class="row">
+       <select class="wr" aria-label="Importancia"><option value="">Importancia…</option>${[1,2,3,4,5].map(n=>`<option value="${n}" ${String(w.rango)===String(n)?"selected":""}>${n}${n===1?" (más importante)":n===5?" (menos importante)":""}</option>`).join("")}</select>
+       <div class="seg" role="group" aria-label="Sentido">${[["positiva","＋ Positiva"],["neutra","＝ Neutra"],["negativa","－ Negativa"]].map(([v,l])=>`<button type="button" data-v="${v}" class="${w.valencia===v?"on":""}">${l}</button>`).join("")}</div>
+     </div></div>`).join("")}
+  <div class="err" id="e_al"></div></div>`;
+  app.querySelectorAll(".word").forEach(el=>{
+    const i=+el.dataset.i;
+    el.querySelector(".wtxt").oninput=e=>{W[i].palabra=e.target.value;save()};
+    el.querySelector(".wr").onchange=e=>{W[i].rango=e.target.value;save()};
+    el.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{W[i].valencia=b.dataset.v;el.querySelectorAll(".seg button").forEach(x=>x.classList.toggle("on",x===b));save()});
+  });
+}
+function vAl(id){
+  const W=S.al[id],e=document.getElementById("e_al");let msg="";
+  if(W.some(w=>!w.palabra.trim()))msg="Escriba las cinco palabras.";
+  else if(W.some(w=>!w.rango))msg="Indique la importancia (1 a 5) de cada palabra.";
+  else if(new Set(W.map(w=>w.rango)).size<5)msg="Use cada número de importancia (1 a 5) una sola vez.";
+  else if(W.some(w=>!w.valencia))msg="Indique si cada palabra es positiva, neutra o negativa.";
+  e.textContent=msg;e.classList.toggle("on",!!msg);
+  if(msg){e.scrollIntoView({behavior:"smooth",block:"center"});return false}return true;
+}
+
+/* ---- Preguntas abiertas ---- */
+const canRecord=!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.MediaRecorder);
+function rAbIntro(){
+  title.textContent="Sección 3 · Preguntas abiertas";
+  app.innerHTML=`<div class="card"><div class="kicker">Sección 3 de 3</div><h2>Preguntas abiertas</h2>
+  <p>Ahora encontrará seis preguntas. Responda con sus propias palabras y, en lo posible, con ejemplos de su experiencia.</p>
+  <p>En cada pregunta puede elegir: <b>✍️ escribir</b> su respuesta o <b>🎙️ grabar un audio</b> (máximo ${Math.round(CONFIG.MAX_AUDIO_SEG/60)} minutos).</p>
+  ${canRecord?`<div class="help">Si elige grabar, el navegador le pedirá permiso para usar el micrófono. Toque <b>Permitir</b>. Busque un lugar tranquilo y hable con naturalidad.</div>`:`<div class="help">Su navegador no permite grabar audio. Podrá responder por escrito. Si prefiere grabar, abra este enlace en Chrome o Safari actualizados.</div>`}</div>`;
+}
+let rec=null; // {mr,stream,chunks,t0,timer,id}
+function rAb(id){
+  const a=AB.find(x=>x.id===id),idx=AB.indexOf(a)+1,R=S.ab[id];
+  title.textContent=`Sección 3 · Pregunta ${idx} de ${AB.length}`;
+  if(!canRecord)R.modo="texto";
+  app.innerHTML=`<div class="card"><div class="kicker">Pregunta ${idx} de ${AB.length} · ${esc(a.t)}</div>
+   <p style="font-weight:600;font-size:17.5px">${esc(a.q)}</p>
+   ${canRecord?`<div class="tabs"><button type="button" data-m="texto" class="${R.modo==="texto"?"on":""}">✍️ Escribir</button><button type="button" data-m="audio" class="${R.modo==="audio"?"on":""}">🎙️ Grabar audio</button></div>`:""}
+   <div id="mt" class="${R.modo==="texto"?"":"hidden"}"><textarea id="txt" placeholder="Escriba aquí su respuesta…">${esc(R.texto)}</textarea><div class="tiny" id="cnt"></div></div>
+   <div id="ma" class="${R.modo==="audio"?"":"hidden"}"><div class="rec" id="recbox"></div></div>
+   <div class="err" id="e_ab"></div></div>`;
+  const txt=document.getElementById("txt"),cnt=document.getElementById("cnt");
+  const upd=()=>{const n=R.texto.trim().split(/\s+/).filter(Boolean).length;cnt.textContent=n?`${n} palabras`:""};
+  txt.oninput=()=>{R.texto=txt.value;upd();save()};upd();
+  app.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{
+    stopAnyRecording();R.modo=b.dataset.m;save();
+    app.querySelectorAll(".tabs button").forEach(x=>x.classList.toggle("on",x===b));
+    document.getElementById("mt").classList.toggle("hidden",R.modo!=="texto");
+    document.getElementById("ma").classList.toggle("hidden",R.modo!=="audio");
+    document.getElementById("e_ab").classList.remove("on");
+  });
+  drawRec(id);
+}
+function fmt(s){s=Math.max(0,Math.floor(s));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")}
+function drawRec(id){
+  const box=document.getElementById("recbox");if(!box)return;const R=S.ab[id];
+  if(rec&&rec.id===id){
+    box.innerHTML=`<div><span class="dot"></span><b>Grabando…</b></div><div class="timer" id="tm">0:00</div>
+    <div class="tiny" style="margin-bottom:10px">Máximo ${fmt(CONFIG.MAX_AUDIO_SEG)}</div>
+    <button type="button" class="btn stop" id="bStop">⏹ Detener grabación</button>`;
+    document.getElementById("bStop").onclick=()=>stopRec();
+  }else if(R.audio){
+    box.innerHTML=`<span class="done-badge">✓ Audio grabado · ${fmt(R.audio.dur)}</span>
+    <audio controls src="${R.audio.url}"></audio>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button type="button" class="btn ghost small" id="bRe">🔄 Grabar de nuevo</button></div>
+    <p class="tiny" style="margin:10px 0 0">Escúchelo antes de continuar. Si quiere cambiarlo, grabe de nuevo.</p>`;
+    document.getElementById("bRe").onclick=()=>{if(confirm("¿Borrar este audio y grabar uno nuevo?")){URL.revokeObjectURL(R.audio.url);R.audio=null;startRec(id)}};
+  }else{
+    box.innerHTML=`<p class="muted" style="margin-bottom:12px">Toque el botón y responda en voz alta.</p>
+    <button type="button" class="btn recbtn" id="bRec">🎙️ Empezar a grabar</button>`;
+    document.getElementById("bRec").onclick=()=>startRec(id);
+  }
+}
+function pickMime(){const c=["audio/webm;codecs=opus","audio/mp4","audio/webm","audio/ogg;codecs=opus","audio/aac"];for(const m of c){try{if(MediaRecorder.isTypeSupported(m))return m}catch(e){}}return ""}
+async function startRec(id){
+  const e=document.getElementById("e_ab");e.classList.remove("on");
+  let stream;
+  try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}})}
+  catch(err){e.textContent="No fue posible usar el micrófono. Revise que haya dado permiso al navegador, o responda por escrito.";e.classList.add("on");return}
+  const mime=pickMime();let mr;
+  try{mr=new MediaRecorder(stream,mime?{mimeType:mime,audioBitsPerSecond:48000}:undefined)}catch(err){mr=new MediaRecorder(stream)}
+  rec={mr,stream,chunks:[],t0:Date.now(),id,timer:null};
+  mr.ondataavailable=ev=>{if(ev.data&&ev.data.size)rec.chunks.push(ev.data)};
+  mr.onstop=()=>{
+    const r=rec;rec=null;clearInterval(r.timer);r.stream.getTracks().forEach(t=>t.stop());
+    const type=(r.mr.mimeType||mime||"audio/webm");const blob=new Blob(r.chunks,{type});
+    const dur=(Date.now()-r.t0)/1000;
+    if(r.discard||blob.size<1000){drawRec(r.id);return}
+    S.ab[r.id].audio={blob,mime:type,dur,url:URL.createObjectURL(blob)};drawRec(r.id);
+  };
+  mr.start(1000);drawRec(id);
+  rec.timer=setInterval(()=>{const s=(Date.now()-rec.t0)/1000;const tm=document.getElementById("tm");if(tm)tm.textContent=fmt(s);if(s>=CONFIG.MAX_AUDIO_SEG)stopRec()},250);
+}
+function stopRec(){if(rec&&rec.mr.state!=="inactive")rec.mr.stop()}
+function stopAnyRecording(){if(rec){rec.discard=false;stopRec()}}
+function vAb(id){
+  const R=S.ab[id],e=document.getElementById("e_ab");let msg="";
+  if(rec){msg="Detenga la grabación antes de continuar."}
+  else if(R.modo==="texto"){if(R.texto.trim().split(/\s+/).filter(Boolean).length<5)msg="Escriba su respuesta (al menos unas pocas líneas) o, si prefiere, grabe un audio."}
+  else if(!R.audio)msg="Grabe su respuesta en audio o, si prefiere, escríbala.";
+  e.textContent=msg;e.classList.toggle("on",!!msg);
+  if(msg){e.scrollIntoView({behavior:"smooth",block:"center"});return false}return true;
+}
+
+/* ---- Revisión y envío ---- */
+function rReview(){
+  title.textContent="Enviar respuestas";
+  const ok=CONFIG.ENDPOINT_URL&&CONFIG.ENDPOINT_URL.startsWith("https://");
+  app.innerHTML=`<div class="card"><div class="kicker">Último paso</div><h2>¡Ya casi termina!</h2>
+  <p>Revise el resumen. Si todo está bien, toque <b>Enviar respuestas</b>.</p>
+  <ul class="summary">
+   <li>Información general: ${CARACT.length} preguntas respondidas</li>
+   <li>Asociación libre: ${AL.length} palabras inductoras</li>
+   ${AB.map(a=>`<li>Pregunta ${a.id.slice(1)}: ${S.ab[a.id].modo==="audio"&&S.ab[a.id].audio?"🎙️ audio ("+fmt(S.ab[a.id].audio.dur)+")":"✍️ texto"}</li>`).join("")}
+  </ul>
+  <p class="muted">Según su conexión y la cantidad de audios, el envío puede tardar hasta un minuto. No cierre la ventana.</p>
+  ${ok?"":`<div class="err on">Vista previa: este cuestionario aún no está conectado al servicio de recepción, por lo que el envío no funcionará.</div>`}
+  <div class="err" id="e_send"></div></div>`;
+}
+function blobToB64(b){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(",")[1]);r.onerror=rej;r.readAsDataURL(b)})}
+function extFor(m){return m.includes("mp4")||m.includes("aac")?"m4a":m.includes("ogg")?"ogg":"webm"}
+let sending=false;
+async function send(){
+  if(sending)return;
+  const e=document.getElementById("e_send");
+  if(!(CONFIG.ENDPOINT_URL||"").startsWith("https://")){e.textContent="El cuestionario no está conectado todavía (vista previa).";e.classList.add("on");return}
+  sending=true;btnNext.disabled=true;btnBack.disabled=true;
+  const id="R-"+new Date().toISOString().replace(/\D/g,"").slice(0,14)+"-"+Math.random().toString(36).slice(2,6).toUpperCase();
+  app.innerHTML=`<div class="card center"><div class="spinner"></div><h2>Enviando sus respuestas…</h2><p class="muted">Por favor, no cierre esta ventana.</p></div>`;
+  try{
+    const abiertas={};
+    for(const a of AB){const R=S.ab[a.id];
+      abiertas[a.id]={titulo:a.t,pregunta:a.q,modo:(R.modo==="audio"&&R.audio)?"audio":"texto",texto:R.modo==="texto"?R.texto.trim():""};
+      if(R.modo==="audio"&&R.audio){abiertas[a.id].audio={mime:R.audio.mime,ext:extFor(R.audio.mime),duracion_seg:Math.round(R.audio.dur),base64:await blobToB64(R.audio.blob)}}
+    }
+    const caract={};CARACT.forEach(f=>{let v=S.c[f.id]||"";if(f.other&&v===f.other)v=f.other+": "+(S.c[f.id+"_otro"]||"").trim();caract[f.id]=String(v).trim()});
+    const payload={id,fecha:new Date().toISOString(),consentimiento:"Acepto participar",caracterizacion:caract,
+      asociacion:Object.fromEntries(AL.map(a=>[a.id,{inductor:a.t,palabras:S.al[a.id].map((w,i)=>({orden:i+1,palabra:w.palabra.trim(),rango:+w.rango,valencia:w.valencia}))}])),
+      abiertas,dispositivo:navigator.userAgent};
+    const r=await fetch(CONFIG.ENDPOINT_URL,{method:"POST",body:JSON.stringify(payload)}); // text/plain: sin preflight CORS
+    let j=null;try{j=await r.json()}catch(_){}
+    if(!r.ok||(j&&j.ok===false))throw new Error((j&&j.error)||("HTTP "+r.status));
+    clearStore();foot.classList.add("hidden");bar.style.width="100%";title.textContent="¡Gracias!";
+    app.innerHTML=`<div class="card center"><div class="big-ico">✅</div><h1>¡Muchas gracias por su participación!</h1>
+    <p>Sus respuestas se enviaron correctamente. Son muy valiosas para comprender el papel de la inteligencia artificial en la formación universitaria.</p>
+    <p class="tiny">Código de registro: ${id}</p><p class="muted">Ya puede cerrar esta ventana.</p></div>`;
+  }catch(err){
+    sending=false;btnNext.disabled=false;btnBack.disabled=false;rReview();
+    const e2=document.getElementById("e_send");e2.textContent="No se pudieron enviar las respuestas. Verifique su conexión a internet y toque «Enviar respuestas» de nuevo. Sus respuestas siguen guardadas en esta pantalla.";e2.classList.add("on");
+  }
+}
+
+/* ---- Navegación ---- */
+btnNext.onclick=()=>{
+  const k=STEPS[step];
+  if(k==="consent"){
+    if(!S.consent){document.getElementById("e_cons").classList.add("on");return}
+    if(S.consent==="No acepto participar")return rDecline();
+  }
+  if(k==="caract"&&!vCaract())return;
+  if(k.startsWith("al:")&&!vAl(k.slice(3)))return;
+  if(k.startsWith("ab:")&&!vAb(k.slice(3)))return;
+  if(k==="review")return send();
+  go(1);
+};
+btnBack.onclick=()=>go(-1);
+window.addEventListener("beforeunload",ev=>{if(!sending&&step>0&&STEPS[step]!=="review"&&AB.some(a=>S.ab[a.id].audio)){ev.preventDefault();ev.returnValue=""}});
+render();
+</script>
+</body>
+</html>
