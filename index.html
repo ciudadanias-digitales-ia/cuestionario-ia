@@ -153,6 +153,28 @@ const STORE="cuestIA_v1";
 function save(){try{const copy={consent:S.consent,c:S.c,al:S.al,ab:{}};AB.forEach(a=>copy.ab[a.id]={modo:S.ab[a.id].modo,texto:S.ab[a.id].texto});localStorage.setItem(STORE,JSON.stringify(copy))}catch(e){}}
 function load(){try{const d=JSON.parse(localStorage.getItem(STORE)||"null");if(!d)return;S.consent=d.consent;Object.assign(S.c,d.c||{});Object.keys(d.al||{}).forEach(k=>S.al[k]=d.al[k]);Object.keys(d.ab||{}).forEach(k=>{if(S.ab[k]){S.ab[k].modo=d.ab[k].modo;S.ab[k].texto=d.ab[k].texto||""}})}catch(e){}}
 function clearStore(){try{localStorage.removeItem(STORE)}catch(e){}}
+/* ---- Un envío por dispositivo ---- */
+const DONE_KEY="cuestIA_enviado",DEV_KEY="cuestIA_dispositivo";
+function getCookie(k){const m=document.cookie.match(new RegExp("(?:^|; )"+k+"=([^;]*)"));return m?decodeURIComponent(m[1]):""}
+function setCookie(k,v){try{document.cookie=k+"="+encodeURIComponent(v)+"; max-age=31536000; path=/; SameSite=Lax"}catch(e){}}
+function lsGet(k){try{return localStorage.getItem(k)||""}catch(e){return ""}}
+function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+function deviceId(){
+  let id=lsGet(DEV_KEY)||getCookie(DEV_KEY);
+  if(!id){id=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():("D"+Date.now().toString(36)+Math.random().toString(36).slice(2,10));}
+  lsSet(DEV_KEY,id);setCookie(DEV_KEY,id);return id;
+}
+const DEVICE_ID=deviceId();
+function alreadySent(){return lsGet(DONE_KEY)||getCookie(DONE_KEY)}
+function markSent(code){lsSet(DONE_KEY,code||"1");setCookie(DONE_KEY,code||"1")}
+function rAlready(){
+  title.textContent="Cuestionario ya respondido";bar.style.width="100%";foot.classList.add("hidden");
+  const code=alreadySent();
+  app.innerHTML=`<div class="card center"><div class="big-ico">✅</div><h1>Este cuestionario ya fue respondido desde este dispositivo</h1>
+  <p>Gracias por su participación. Solo se permite un envío por dispositivo.</p>
+  ${code&&code!=="1"?`<p class="tiny">Código de registro: ${esc(code)}</p>`:""}
+  <p class="muted">Si cree que se trata de un error, escriba a <a href="mailto:${esc(CONFIG.CORREO_CONTACTO)}">${esc(CONFIG.CORREO_CONTACTO)}</a>.</p></div>`;
+}
 load();
 
 /* ---------------- Pasos ---------------- */
@@ -409,11 +431,12 @@ async function send(){
     const caract={};CARACT.forEach(f=>{let v=S.c[f.id]||"";if(f.other&&v===f.other)v=f.other+": "+(S.c[f.id+"_otro"]||"").trim();caract[f.id]=String(v).trim()});
     const payload={id,fecha:new Date().toISOString(),consentimiento:"Acepto participar",caracterizacion:caract,
       asociacion:Object.fromEntries(AL.map(a=>[a.id,{inductor:a.t,palabras:S.al[a.id].map((w,i)=>({orden:i+1,palabra:w.palabra.trim(),rango:+w.rango,valencia:w.valencia}))}])),
-      abiertas,dispositivo:navigator.userAgent};
+      abiertas,dispositivo:navigator.userAgent,dispositivo_id:DEVICE_ID};
     const r=await fetch(CONFIG.ENDPOINT_URL,{method:"POST",body:JSON.stringify(payload)}); // text/plain: sin preflight CORS
     let j=null;try{j=await r.json()}catch(_){}
+    if(j&&j.duplicado){clearStore();markSent(j.id||"1");sending=false;return rAlready();}
     if(!r.ok||(j&&j.ok===false))throw new Error((j&&j.error)||("HTTP "+r.status));
-    clearStore();foot.classList.add("hidden");bar.style.width="100%";title.textContent="¡Gracias!";
+    markSent(id);clearStore();foot.classList.add("hidden");bar.style.width="100%";title.textContent="¡Gracias!";
     app.innerHTML=`<div class="card center"><div class="big-ico">✅</div><h1>¡Muchas gracias por su participación!</h1>
     <p>Sus respuestas se enviaron correctamente. Son muy valiosas para comprender el papel de la inteligencia artificial en la formación universitaria.</p>
     <p class="tiny">Código de registro: ${id}</p><p class="muted">Ya puede cerrar esta ventana.</p></div>`;
@@ -438,7 +461,7 @@ btnNext.onclick=()=>{
 };
 btnBack.onclick=()=>go(-1);
 window.addEventListener("beforeunload",ev=>{if(!sending&&step>0&&STEPS[step]!=="review"&&AB.some(a=>S.ab[a.id].audio)){ev.preventDefault();ev.returnValue=""}});
-render();
+if(alreadySent())rAlready();else render();
 </script>
 </body>
 </html>
